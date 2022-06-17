@@ -5,15 +5,14 @@
 package edu.poly.timetable;
 
 import java.awt.Color;
+import java.awt.HeadlessException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import static org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory.model;
-import org.apache.poi.ss.formula.functions.Columns;
 
 /**
  *
@@ -30,55 +29,19 @@ public class SchedualTable extends javax.swing.JFrame {
      */
     public SchedualTable() {
         initComponents();
-
-        //initComboBox();
+        setLocationRelativeTo(null);
         initTableModel();
-
     }
 
     // Khởi tạo phương thức Table
     private void initTableModel() {
-        String[] columnNames = new String[]{"TgBatDau", "MaLop"};
+        String[] columnNames = new String[]{"TenMon", "MaLop"};
 
         tblModel = new DefaultTableModel();
         tblModel.setColumnIdentifiers(columnNames);
         tblSubject.setModel(tblModel);
     }
 
-    /*private void initComboBox() {
-        try {
-            // Kết nối tới CSDL
-            // Nạp driver
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            // Mở kết nối tới cơ sỏ dữ liệu
-            String connectionUrl = "jdbc:sqlserver://localhost;database=DemoDB;";
-            String username = "demo";
-            String password = "demo";
-            // Mở kết nối
-            Connection con = DriverManager.getConnection(connectionUrl, username, password);
-            // Câu lệnh truy vấn
-            String sql = "select MaHP from MONHOC";
-            // Truyền câu lệnh truy vấn vào phương thức PreparedStatment tạo đối tượng pstmt
-            PreparedStatement pstmt = con.prepareStatement(sql);
-            // Trả về tập kết quả
-            pstmt.executeQuery();
-            // gán kết quả cho rs
-            ResultSet rs = pstmt.executeQuery();
-            // Loại bỏ các thành phần có trong cbx
-            cbxSubject.removeAllItems();
-            // Duyệt dữ liệu lưu trong rs
-            while (rs.next()) {
-                cbxSubject.addItem(rs.getString("MaHP"));
-            }
-            // Đóng các kết nối
-            rs.close();
-            pstmt.close();
-            con.close();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
-            e.printStackTrace();
-        }
-    }*/
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -113,6 +76,7 @@ public class SchedualTable extends javax.swing.JFrame {
         jMenuBar1.add(jMenu2);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("THỜI KHÓA BIỂU MÔN HỌC");
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Search", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 0, 18))); // NOI18N
 
@@ -167,11 +131,6 @@ public class SchedualTable extends javax.swing.JFrame {
                 "Title 1", "Title 2"
             }
         ));
-        tblSubject.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tblSubjectMouseClicked(evt);
-            }
-        });
         jScrollPane1.setViewportView(tblSubject);
 
         btnView.setText("ViewDetail");
@@ -304,7 +263,7 @@ public class SchedualTable extends javax.swing.JFrame {
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         StringBuilder sb = new StringBuilder();
         if (txtSubject.getText().equals("")) {
-            sb.append("Mã Học Phần phải được nhập để tìm kiếm!");
+            sb.append("Mã Học phần phải được nhập để tìm kiếm!");
             txtSubject.setBackground(Color.red);
         } else {
             txtSubject.setBackground(Color.white);
@@ -313,73 +272,57 @@ public class SchedualTable extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, sb);
             return;
         }
+        // Câu lệnh truy vấn
+        String sql = "select * from TKB where MaHP like ?";
+        try (
+                 Connection con = DatabaseHelper.openConnection();  PreparedStatement pstmt = con.prepareStatement(sql);) {
 
-        try {
-            // Kết nối tới CSDL
-            // Nạp driver
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            // Mở kết nối tới cơ sỏ dữ liệu
-            String connectionUrl = "jdbc:sqlserver://localhost;database=DemoDB;";
-            String username = "demo";
-            String password = "demo";
-            // Mở kết nối
-            Connection con = DriverManager.getConnection(connectionUrl, username, password);
-            // Câu lệnh truy vấn
-            String sql = "select* from MONHOC where MaHP like ?";
-            // Truyền câu lệnh truy vấn vào phương thức PreparedStatment tạo đối tượng pstmt
-            PreparedStatement pstmt = con.prepareStatement(sql);
-
-            // Xây dưng tiêu chí tìm kiếm trong like
-            String searchCriteria = "%";
-            /*if (!cbxSubject.getSelectedItem().equals("")) {
-                searchCriteria += cbxSubject.getSelectedItem() + "%";
-            }*/
-
-            searchCriteria += txtSubject.getText() + "%";
             // Thiết lập giá trị cho phần dấu?
-            pstmt.setString(1, searchCriteria);
+            pstmt.setString(1, txtSubject.getText());
             //Nhận kết quả trả về từ câu lệnh truy vấn
             ResultSet rs = pstmt.executeQuery();
+            int count = 0;
             // Xóa dữ liệu trong bảng
             tblModel.setRowCount(0);
-            int count = 0;
             // Duyệt qua tập rs nhận được
             while (rs.next()) {
-
                 // Thêm 1 hàng trong tblModel
                 tblModel.addRow(new Object[]{
-                    rs.getString("TgBatDau"),
+                    rs.getString("TenMon"),
                     rs.getInt("MaLop"),});
                 count++;
             }
             // Cập nhật lại bảng
             tblModel.fireTableDataChanged();
-
+            // Nếu không có Mã HP đưa ra thông báo
             if (count == 0) {
-                JOptionPane.showMessageDialog(this, "Mã Học Phần không có trong dữ liệu!");
+                JOptionPane.showMessageDialog(this, "Mã Học Phần này không có trong CSDL");
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
-            e.printStackTrace();
         }
     }//GEN-LAST:event_btnSearchActionPerformed
 
-    private void tblSubjectMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSubjectMouseClicked
-
-    }//GEN-LAST:event_tblSubjectMouseClicked
-
     private void btnViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewActionPerformed
-        // Lấy hàng được lựa chọn
-        int row = tblSubject.getSelectedRow();
-        // Nếu hàng >=0
-        if (row >= 0) {
-            // Lấy giá trị MaLop trong cột 1 của table trả về giá trị liểu chuỗi
-            String MaLop = tblSubject.getValueAt(row, 1).toString();
-            // Tạo form truyền vào username
-            ViewDetail form = new ViewDetail(MaLop);
-            // Gọi phương thức hiển thị form
-            form.setVisible(true);
+        try {
+            // Lấy hàng được lựa chọn
+            int row = tblSubject.getSelectedRow();
+            // Nếu hàng >=0
+            if (row >= 0) {
+                // Lấy giá trị MaLop trong cột 1 của table trả về giá trị liểu chuỗi
+                String MaLop = tblSubject.getValueAt(row, 1).toString();
+                // Tạo form truyền vào username
+                ViewDetail form = new ViewDetail(MaLop);
+                // Gọi phương thức hiển thị form
+                form.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "Bạn chưa chọn bất bỳ lớp nào!");
+            }
+        } catch (HeadlessException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
+
+
     }//GEN-LAST:event_btnViewActionPerformed
 
     /**
@@ -411,6 +354,7 @@ public class SchedualTable extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new SchedualTable().setVisible(true);
             }

@@ -5,7 +5,6 @@
 package edu.poly.timetable;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.swing.JOptionPane;
@@ -18,29 +17,22 @@ public class ViewDetail extends javax.swing.JFrame {
 
     /**
      * Creates new form ViewDetail
+     *
+     * @param MaLop
      */
     public ViewDetail(String MaLop) {
         initComponents();
-
+        setLocationRelativeTo(null);
         loadEmpDetail(MaLop);
     }
 
     private void loadEmpDetail(String MaLop) {
-        try {
-            // Kết nối tới CSDL
-            // Nạp driver
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            // Mở kết nối tới cơ sỏ dữ liệu
-            String connectionUrl = "jdbc:sqlserver://localhost;database=DemoDB;";
-            String username = "demo";// tránh xung đột về tên nên đặt tên khác so với tham số
-            String password = "demo";
-            // Mở kết nối
-            Connection con = DriverManager.getConnection(connectionUrl, username, password);
-            // Câu lệnh truy vấn
-            String sql = "select * from  MONHOC where MaLop = ?";
-            PreparedStatement pstmt = con.prepareStatement(sql);
+        String sql = "select * from TKB where MaLop like ?";
+        try (
+                 Connection con = DatabaseHelper.openConnection();  PreparedStatement pstmt = con.prepareStatement(sql);) {
             // Thiết lập giá trị của username vào dấu ?
             pstmt.setString(1, MaLop);
+            // Trả tập kết quả
             ResultSet rs = pstmt.executeQuery();
             // Kiểm tra có dữ liệu hay ko
             if (rs.next()) {
@@ -49,16 +41,12 @@ public class ViewDetail extends javax.swing.JFrame {
                 txtMaLop.setText(rs.getString("MaLop"));
                 txtTenMon.setText(rs.getString("TenMon"));
                 txtThu.setText(rs.getString("Thu"));
-                txtBatDau.setText(rs.getString("TgBatDau"));
-                txtKetThuc.setText(rs.getString("TgKetThuc"));
+                txtBatDau.setText(rs.getString("BD"));
+                txtKetThuc.setText(rs.getString("KT"));
             }
-            // đóng kết nối
-            rs.close();
-            pstmt.close();
-            con.close();
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -86,13 +74,11 @@ public class ViewDetail extends javax.swing.JFrame {
         txtThu = new javax.swing.JTextField();
         btnClose = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Thông Tin Môn Học", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Arial", 0, 18))); // NOI18N
 
-        jLabel5.setText("TgBatDau:");
+        jLabel5.setText("BatDau:");
 
-        jLabel6.setText("TgKetThuc:");
+        jLabel6.setText("KetThuc:");
 
         jLabel1.setText("MaHP:");
 
