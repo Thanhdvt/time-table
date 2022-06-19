@@ -6,13 +6,27 @@ package edu.poly.timetable;
 
 import java.awt.Color;
 import java.awt.HeadlessException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  *
@@ -20,6 +34,7 @@ import javax.swing.table.DefaultTableModel;
  */
 public class SchedualTable extends javax.swing.JFrame {
 
+    String path;
     // Khai báo đối tượng model
     private DefaultTableModel tblModel;
     DefaultListModel<String> model;
@@ -28,6 +43,7 @@ public class SchedualTable extends javax.swing.JFrame {
      * Creates new form SchedualTable
      */
     public SchedualTable() {
+
         initComponents();
         setLocationRelativeTo(null);
         initTableModel();
@@ -36,7 +52,6 @@ public class SchedualTable extends javax.swing.JFrame {
     // Khởi tạo phương thức Table
     private void initTableModel() {
         String[] columnNames = new String[]{"TenMon", "MaLop"};
-
         tblModel = new DefaultTableModel();
         tblModel.setColumnIdentifiers(columnNames);
         tblSubject.setModel(tblModel);
@@ -68,6 +83,11 @@ public class SchedualTable extends javax.swing.JFrame {
         tblTimetable = new javax.swing.JTable();
         jLabel3 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
+        jPanel4 = new javax.swing.JPanel();
+        fileLabel = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        btnOpen = new javax.swing.JButton();
+        jLabel6 = new javax.swing.JLabel();
 
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
@@ -101,10 +121,10 @@ public class SchedualTable extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(txtSubject, javax.swing.GroupLayout.PREFERRED_SIZE, 472, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtSubject)
                 .addGap(18, 18, 18)
                 .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -221,9 +241,52 @@ public class SchedualTable extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
                 .addContainerGap())
         );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        fileLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        fileLabel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        jLabel5.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        jLabel5.setText("File Link:");
+
+        btnOpen.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        btnOpen.setText("Open");
+        btnOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnOpenActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(fileLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnOpen)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(btnOpen, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(fileLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(15, 15, 15))
+        );
+
+        jLabel6.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        jLabel6.setText("SCHEDUAL SUBJECTS");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -233,34 +296,48 @@ public class SchedualTable extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 291, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(480, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 764, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 512, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jSeparator1)
+                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 0, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(12, 12, 12)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(1, 1, 1)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap()
+                .addComponent(jLabel6)
+                .addGap(18, 18, 18)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        ArrayList<String> MaHP = new ArrayList<>();
+        ArrayList<Integer> MaLop = new ArrayList<>();
+        ArrayList<String> TenMon = new ArrayList<>();
+        ArrayList<Integer> BD = new ArrayList<>();
+        ArrayList<Integer> KT = new ArrayList<>();
+        ArrayList<Integer> Thu = new ArrayList<>();
+
         StringBuilder sb = new StringBuilder();
         if (txtSubject.getText().equals("")) {
             sb.append("Mã Học phần phải được nhập để tìm kiếm!");
@@ -272,25 +349,53 @@ public class SchedualTable extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, sb);
             return;
         }
-        // Câu lệnh truy vấn
-        String sql = "select * from TKB where MaHP like ?";
-        try (
-                 Connection con = DatabaseHelper.openConnection();  PreparedStatement pstmt = con.prepareStatement(sql);) {
 
-            // Thiết lập giá trị cho phần dấu?
-            pstmt.setString(1, txtSubject.getText());
-            //Nhận kết quả trả về từ câu lệnh truy vấn
-            ResultSet rs = pstmt.executeQuery();
+        //ArrayList<String> headers = new ArrayList<>();
+        try ( FileInputStream fis = new FileInputStream(path);) {
+            XSSFWorkbook importedfile = new XSSFWorkbook(fis);
+            XSSFSheet shee1 = importedfile.getSheetAt(0);
+
+            for (Row row : shee1) {
+                Iterator<Cell> cellIterator = row.cellIterator();
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    if (row.getRowNum() == 0) {
+                        // headers.add(cell.getStringCellValue());
+                    } else {
+                        switch (cell.getColumnIndex()) {
+                            case 0 ->
+                                MaHP.add(cell.getStringCellValue());
+                            case 1 ->
+                                MaLop.add((int) cell.getNumericCellValue());
+                            case 2 ->
+                                TenMon.add(cell.getStringCellValue());
+                            case 3 ->
+                                BD.add((int) cell.getNumericCellValue());
+                            case 4 ->
+                                KT.add((int) cell.getNumericCellValue());
+                            case 5 ->
+                                Thu.add((int) cell.getNumericCellValue());
+                            default -> {
+                            }
+                        }
+                    }
+                }
+            }
+
+            String ID = txtSubject.getText();
+            int size = MaHP.size();
+
             int count = 0;
             // Xóa dữ liệu trong bảng
             tblModel.setRowCount(0);
-            // Duyệt qua tập rs nhận được
-            while (rs.next()) {
-                // Thêm 1 hàng trong tblModel
-                tblModel.addRow(new Object[]{
-                    rs.getString("TenMon"),
-                    rs.getInt("MaLop"),});
-                count++;
+            for (int x = 0; x < size; x++) {
+                if (MaHP.get(x).equals(ID)) {
+                    //Thêm 1 hàng trong tblModel
+                    tblModel.addRow(new Object[]{
+                        TenMon.get(x),
+                        MaLop.get(x)});
+                    count++;
+                }
             }
             // Cập nhật lại bảng
             tblModel.fireTableDataChanged();
@@ -298,9 +403,51 @@ public class SchedualTable extends javax.swing.JFrame {
             if (count == 0) {
                 JOptionPane.showMessageDialog(this, "Mã Học Phần này không có trong CSDL");
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+            fis.close();
+
+//            System.out.println("Successfully!");
+//            System.out.println("MaHP: "+ MaHP);
+//            System.out.println("MaLop: "+ MaLop);
+//            System.out.println("TenMon: "+ TenMon);
+//            System.out.println("BD: "+ BD);
+//            System.out.println("KT: "+ KT);
+//            System.out.println("Thu: "+ Thu);
+
+        } catch (IOException ex) {
+            Logger.getLogger(Xfile.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+// ctrl + / => Comment nhiều dòng 1 lúc
+//// Câu lệnh truy vấn
+//        String sql = "select * from TKB where MaHP like ?";
+//        try (
+//                 Connection con = DatabaseHelper.openConnection();  
+//                  PreparedStatement pstmt = con.prepareStatement(sql);) {
+//
+//            // Thiết lập giá trị cho phần dấu?
+//            pstmt.setString(1, txtSubject.getText());
+//            //Nhận kết quả trả về từ câu lệnh truy vấn
+//            ResultSet rs = pstmt.executeQuery();
+//            int count = 0;
+//            // Xóa dữ liệu trong bảng
+//            tblModel.setRowCount(0);
+//            // Duyệt qua tập rs nhận được
+//            while (rs.next()) {
+//                // Thêm 1 hàng trong tblModel
+//                tblModel.addRow(new Object[]{
+//                    rs.getString("TenMon"),
+//                    rs.getInt("MaLop"),});
+//                count++;
+//            }
+//            // Cập nhật lại bảng
+//            tblModel.fireTableDataChanged();
+//            // Nếu không có Mã HP đưa ra thông báo
+//            if (count == 0) {
+//                JOptionPane.showMessageDialog(this, "Mã Học Phần này không có trong CSDL");
+//            }
+//        } catch (Exception e) {
+//            JOptionPane.showMessageDialog(this, e.getMessage());
+//        }
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void btnViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewActionPerformed
@@ -310,9 +457,9 @@ public class SchedualTable extends javax.swing.JFrame {
             // Nếu hàng >=0
             if (row >= 0) {
                 // Lấy giá trị MaLop trong cột 1 của table trả về giá trị liểu chuỗi
-                String MaLop = tblSubject.getValueAt(row, 1).toString();
+                String imfor = tblSubject.getValueAt(row, 1).toString();
                 // Tạo form truyền vào username
-                ViewDetail form = new ViewDetail(MaLop);
+                ViewDetail form = new ViewDetail(imfor, path);
                 // Gọi phương thức hiển thị form
                 form.setVisible(true);
             } else {
@@ -320,10 +467,30 @@ public class SchedualTable extends javax.swing.JFrame {
             }
         } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(SchedualTable.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
     }//GEN-LAST:event_btnViewActionPerformed
+
+    private void btnOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOpenActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        // Lọc file cho phép người dùng lựa chọn
+        FileNameExtensionFilter excelFilter = new FileNameExtensionFilter("file excel", "xlsx", "xls");
+        // Truyền excelFilter vào fileChooser
+        fileChooser.setFileFilter(excelFilter);
+        // Thiết lập chọn 1(false) hay nhiều file cùng lúc(true)
+        fileChooser.setMultiSelectionEnabled(false);
+        // Hiện thị hộp thoại chọn file
+        int x = fileChooser.showDialog(this, "Chọn File");
+        if (x == JFileChooser.APPROVE_OPTION) {
+            // Chọn 1 file
+            File f = fileChooser.getSelectedFile();
+            // CHọn nhiều files
+            //File f = fileChooser.getSelectedFiles();     
+            path = f.getAbsolutePath();
+            fileLabel.setText(path);
+        }
+    }//GEN-LAST:event_btnOpenActionPerformed
 
     /**
      * @param args the command line arguments
@@ -341,38 +508,36 @@ public class SchedualTable extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(SchedualTable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(SchedualTable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(SchedualTable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(SchedualTable.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
+        //</editor-fold>
+
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new SchedualTable().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new SchedualTable().setVisible(true);
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnOpen;
     private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnView;
+    private javax.swing.JLabel fileLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
@@ -380,4 +545,5 @@ public class SchedualTable extends javax.swing.JFrame {
     private javax.swing.JTable tblTimetable;
     private javax.swing.JTextField txtSubject;
     // End of variables declaration//GEN-END:variables
+
 }

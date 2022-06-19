@@ -4,10 +4,22 @@
  */
 package edu.poly.timetable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import javax.swing.JOptionPane;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+//import java.sql.Connection;
+//import java.sql.PreparedStatement;
+//import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+//import javax.swing.JOptionPane;
+//import org.apache.poi.hpsf.ClassIDPredefined;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  *
@@ -18,35 +30,97 @@ public class ViewDetail extends javax.swing.JFrame {
     /**
      * Creates new form ViewDetail
      *
-     * @param MaLop
+     * @param imfor
+     * @param path
+     * @throws java.io.FileNotFoundException
+     *
      */
-    public ViewDetail(String MaLop) {
+    public ViewDetail(String imfor, String path) throws FileNotFoundException {
         initComponents();
         setLocationRelativeTo(null);
-        loadEmpDetail(MaLop);
+        loadEmpDetail(imfor, path);
     }
 
-    private void loadEmpDetail(String MaLop) {
-        String sql = "select * from TKB where MaLop like ?";
-        try (
-                 Connection con = DatabaseHelper.openConnection();  PreparedStatement pstmt = con.prepareStatement(sql);) {
-            // Thiết lập giá trị của username vào dấu ?
-            pstmt.setString(1, MaLop);
-            // Trả tập kết quả
-            ResultSet rs = pstmt.executeQuery();
-            // Kiểm tra có dữ liệu hay ko
-            if (rs.next()) {
-                // Nếu có lây giá trị hiển thị
-                txtMaHP.setText(rs.getString("MaHP"));
-                txtMaLop.setText(rs.getString("MaLop"));
-                txtTenMon.setText(rs.getString("TenMon"));
-                txtThu.setText(rs.getString("Thu"));
-                txtBatDau.setText(rs.getString("BD"));
-                txtKetThuc.setText(rs.getString("KT"));
+    private void loadEmpDetail(String imfor, String path) throws FileNotFoundException {
+        ArrayList<String> MaHP = new ArrayList<>();
+        ArrayList<Integer> MaLop = new ArrayList<>();
+        ArrayList<String> TenMon = new ArrayList<>();
+        ArrayList<Integer> BD = new ArrayList<>();
+        ArrayList<Integer> KT = new ArrayList<>();
+        ArrayList<Integer> Thu = new ArrayList<>();
+        //ArrayList<String> headers = new ArrayList<>();
+
+        try ( FileInputStream fis = new FileInputStream(path);) {
+            XSSFWorkbook importedfile = new XSSFWorkbook(fis);
+            XSSFSheet shee1 = importedfile.getSheetAt(0);
+
+            for (Row row : shee1) {
+                Iterator<Cell> cellIterator = row.cellIterator();
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    if (row.getRowNum() == 0) {
+                        // headers.add(cell.getStringCellValue());
+                    } else {
+                        switch (cell.getColumnIndex()) {
+                            case 0 ->
+                                MaHP.add(cell.getStringCellValue());
+                            case 1 ->
+                                MaLop.add((int) cell.getNumericCellValue());
+                            case 2 ->
+                                TenMon.add(cell.getStringCellValue());
+                            case 3 ->
+                                BD.add((int) cell.getNumericCellValue());
+                            case 4 ->
+                                KT.add((int) cell.getNumericCellValue());
+                            case 5 ->
+                                Thu.add((int) cell.getNumericCellValue());
+                            default -> {
+                            }
+                        }
+                    }
+                }
+            }
+            int size = MaLop.size();
+            //System.out.println(size);
+            for (int x = 0; x < size; x++) {
+                if (MaLop.get(x).toString().equals(imfor)) {
+                    //System.out.println(x);
+                    txtMaHP.setText(MaHP.get(x));
+                    txtMaLop.setText(MaLop.get(x).toString());
+                    txtTenMon.setText(TenMon.get(x));
+                    txtBatDau.setText(BD.get(x).toString());
+                    txtKetThuc.setText(KT.get(x).toString());
+                    txtThu.setText(Thu.get(x).toString());
+//                    System.out.println(MaHP.get(x));
+//                    System.out.println(MaLop.get(x));
+//                    System.out.println(Thu.get(x));
+                }
             }
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+//        String sql = "select * from TKB where MaLop like ?";
+//        try (
+//                 Connection con = DatabaseHelper.openConnection();  PreparedStatement pstmt = con.prepareStatement(sql);) {
+//            // Thiết lập giá trị của username vào dấu ?
+//            pstmt.setString(1, MaLop);
+//            // Trả tập kết quả
+//            ResultSet rs = pstmt.executeQuery();
+//            // Kiểm tra có dữ liệu hay ko
+//            if (rs.next()) {
+//                // Nếu có lây giá trị hiển thị
+//                txtMaHP.setText(rs.getString("MaHP"));
+//                txtMaLop.setText(rs.getString("MaLop"));
+//                txtTenMon.setText(rs.getString("TenMon"));
+//                txtThu.setText(rs.getString("Thu"));
+//                txtBatDau.setText(rs.getString("BD"));
+//                txtKetThuc.setText(rs.getString("KT"));
+//            }
+//
+//        } catch (Exception e) {
+//            JOptionPane.showMessageDialog(this, e.getMessage());
+//        }
+            fis.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Xfile.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
